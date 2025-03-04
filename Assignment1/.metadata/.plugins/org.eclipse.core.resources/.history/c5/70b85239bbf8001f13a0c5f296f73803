@@ -1,0 +1,78 @@
+.syntax unified
+.thumb
+
+.global assemblyFunction
+
+// Clock registers
+.equ RCC, 0x40021000
+.equ AHBENR, 0x14
+
+// Relevant bits to enable GPIO
+.equ GPIOA_ENABLE, 17
+.equ GPIOE_ENABLE, 21
+
+// Port A & E base address and mode selection
+.equ GPIOA_BASE, 0x48000000
+.equ GPIOE_BASE, 0x48001000
+.equ MODER, 0x00
+
+// Input and output registers for GPIO ports
+.equ IDR, 0x10
+.equ ODR, 0x14
+
+// Define variables
+.data
+
+// Define code
+.text
+
+assemblyFunction:
+
+	// Prereqs to use GPIO pins
+	BL enableClocks
+	BL setupGPIO
+
+	// R0 will always hold Port A's base address
+	LDR R0, =GPIOA_BASE
+
+	// R2 will always hold Port E's base address
+	LDR R2, =GPIOE_BASE
+
+waitForButton:
+	LDRB R1, [R0, #IDR] // Get the input register values of Port A
+	ANDS R1, #0x01 // Check if the first bit is set. S is added for condition to branch
+	BNE pressed // If it is set, branch to another subroutine
+
+turnOffLEDs:
+	LDRB R3, =0x00000000 // Value for no LEDs to be lit
+	STRB R3, [R2, #ODR + 1] // Store the value in ODR [15:8]
+	B waitForButton // Otherwise, keep waiting
+
+pressed:
+	 LDRB R3, =0x00000001 // Value to light up one LED
+	 STRB R3, [R2, #ODR + 1] // Store the value in ODR [15:8]
+	 B waitForButton // Return from function call
+
+
+enableClocks:
+	LDR R0, =RCC // Load register with clock base adderss
+	LDR R1, [R0, #AHBENR] // Load R1 with peripheral clock register's values
+	ORR R1, 1 << GPIOA_ENABLE | 1 << GPIOE_ENABLE // Set relevant bits to enable clocks for Port A and E
+	STR R1, [R0, #AHBENR] // Store the valye back into the preipheral clock register
+	BX LR // Return from function
+
+setupGPIO:
+
+	// LEDs
+	LDR R0, =GPIOE_BASE // Load base address of Port E's GPIO
+	LDRH R2, =0x5555 // value to set 8 pins (the LEDs) to output
+	STRH R2, [R0, #MODER+2] // Actually set the values in the high 16 bits of the mode register
+
+
+	// Push button
+	LDR R0, =GPIOA_BASE // Load register 0 with GPIOA address
+	LDRB R1, [R0, #MODER] // Load register 1 with the lowest byte in R0 offset by 0
+	AND R1, #0b11111100 // Clear bits for PA0, but leave the rest as they are
+	STRB R1, [R0, #MODER] // Store result in GPIOA's low byte
+
+	BX LR // Return from function
