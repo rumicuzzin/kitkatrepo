@@ -37,7 +37,7 @@ main:
  	@ Load the address of byte_array_1 first, then overwrite it with word_array_1.
 
 	LDR R0, =0x1234
-	LDR R1, =0x0001
+	LDR R1, =0x0002
  	@Loads immediate values into registers
 
 forever_loop :
