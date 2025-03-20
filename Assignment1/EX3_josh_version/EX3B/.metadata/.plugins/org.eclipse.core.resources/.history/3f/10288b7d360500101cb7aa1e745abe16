@@ -1,0 +1,80 @@
+.syntax unified
+.thumb
+
+#include "initialise.s"
+#include "definitions.s"
+
+.global main
+
+.data
+
+.align
+
+tx_string: .ascii "man im broke\r\n"	@String
+
+.text
+
+main:
+	@BL initialise_power
+	@BL change_clock_speed
+	BL enable_peripheral_clocks
+	BL enable_uart4
+	BL enable_button
+	
+	transmit_loop:
+		BL check_button
+
+		BL tx_loop
+
+		B transmit_loop
+
+check_button:
+	LDR R0, = GPIOA
+	LDR R1, [R0, IDR]
+	TST R1, #1 << BUTTON_PIN
+
+	BEQ check_button
+
+	BX LR
+
+tx_loop:
+	LDR R1, tx_string		@Load string address
+	MOV R4, #1				@Increment value
+	LDRB R2, [R1], R4		@Load value
+	CMP R2, NULL			@Check for null character
+	
+	BEQ terminate			@Time to terminate
+	
+	B tx_uart				@Branch to send char
+
+terminate:
+	MOV R2, ARNOLDSCHWARZENEGGER	@Append terminator 
+	BL tx_uart
+
+	BX LR						@Exit program
+
+tx_uart:
+	LDR R0, = UART4				@Load base address
+	LDR R3, [R0, USART_ISR]		@Load the status of the UART
+	TST R3, #1 << UART_TXE  	@Check if transmit buffer is ready for more data
+	
+	BEQ tx_uart					@Reloop until ready for transmit
+
+	STRB R2, [R0, USART_TDR] 	@Load the next value in the string into the transmit data register
+
+	ADD R4, #0x1				@Add 1 to increment value
+
+	B delay_loop				@Delay
+
+delay_loop:
+	LDR R9, =0xfffff
+
+	B delay_inner
+
+delay_inner:
+	SUBS R9, #1					@Decrement delay
+	BGT delay_inner
+	
+	BX LR 						@Return 
+
+	
