@@ -1,0 +1,7 @@
+"./Src/definitions.o"
+"./Src/initialise.o"
+"./Src/taska.o"
+"./Src/taskc.o"
+"./Src/taskd.o"
+"./Src/taske.o"
+"./Startup/startup_stm32f303vctx.o"
