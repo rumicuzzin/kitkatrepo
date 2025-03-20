@@ -1,8 +1,8 @@
-3:38 discusssed and distributed assignment roles 
-  Alex - Exercise 1 (memory and pointers)
+3:38 discussed and distributed assignment roles 
+  Alex - Exercise 2 (memory and pointers)
   Kelian - Exercise 2 (Digital I/O)
   Josh - Exercise 3 (serial communication)
-  Willem - Exercise 4 (hardware timers)
+  Willem - Exercise 3 (hardware timers)
 
 3:50
   Willem & Josh - Looked at how to pull and push using git

@@ -1,0 +1,7 @@
+Attendance - Kelian Landry, Joshua Kim, Willem Rumi
+3:00 - Arrived to tutorial
+3:30 - Collected STM32 Board and cable
+3:45 - Created GitHub Repo called kitkatrepo and shared first assembly file
+3:50 - Getting more familiar with Github and Git
+4:10 - Installed IDE and ran example file using debugger
+5:00 - Home time
