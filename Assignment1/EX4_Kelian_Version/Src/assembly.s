@@ -12,31 +12,35 @@ main:
     BL enable_timer2_clock
     BL enable_peripheral_clocks
     BL initialise_discovery_board
-    BL configure_timer
 
+    @ Configure Timer 2 for 0.5s delay (1 MHz clock → ARR = 50000)
     LDR R0, =TIM2
-    MOV R1, #0b1           @ Enable timer
+    MOV R1, #159               @ Prescaler to get 1 MHz from system clock
+    STR R1, [R0, TIM_PSC]
+
+    LDR R1, =50000            @ ARR = 500000 → overflow every 0.5 sec
+    STR R1, [R0, TIM_ARR]
+
+    MOV R1, #0b10000001        @ ARPE=1, CEN=1
     STR R1, [R0, TIM_CR1]
 
-    MOV R4, #10000         @ Number of 0.1ms periods in 1 second
+    LDR R5, =GPIOE             @ Load base address of GPIOE
 
-    LDR R5, =GPIOE         @ Load GPIOE base address
-count_loop:
-    LDR R0, =TIM2
+loop:
+    @ Wait for update event (UIF = bit 0 in TIM_SR)
 wait_for_update:
-    LDR R1, [R0, TIM_SR]   @ Check status register
-    TST R1, #0x01          @ Check if update event occurred
-    BEQ wait_for_update    @ Wait for timer to overflow
+    LDR R0, =TIM2
+    LDR R1, [R0, TIM_SR]
+    TST R1, #0x1
+    BEQ wait_for_update
 
-    STR R1, [R0, TIM_SR]   @ Clear update event flag
+    @ Clear the update event flag (write 0 to bit 0 only)
+    MOV R1, #0x0
+    STR R1, [R0, TIM_SR]
 
-    SUBS R4, R4, #1        @ Decrement counter
-    BNE count_loop         @ Repeat until 1 second is reached
+    @ Toggle PE8
+    LDR R6, [R5, ODR]          @ Read current output state
+    EOR R6, R6, #0x0100        @ Toggle bit 8
+    STR R6, [R5, ODR]          @ Write updated value
 
-    @ Toggle LED every 1 second
-    LDR R6, [R5, ODR]      @ Load current LED state
-    EOR R6, R6, #0x0100   @ Toggle bit 8 (Assuming LED is on PE8)
-    STR R6, [R5, ODR]      @ Store updated LED state
-
-    MOV R4, #10000         @ Reset counter for next 1 second interval
-    B count_loop           @ Continue blinking indefinitely
+    B loop                     @ Repeat forever
