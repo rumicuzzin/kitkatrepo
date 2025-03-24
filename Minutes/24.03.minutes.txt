@@ -1,0 +1,11 @@
+2:00 - Full group meets in mechatronics lab for demo practice before marking session on tuesday 25/03
+
+2:10 - Github clean up is discussed and extra files are removed
+
+2:20 - Demo plans are discussed including who would demo what sections
+
+2:25 - Ex5 demo is practiced with two boards to show UART communication
+
+2:50 - Intagration task demo is done and each member is adding comments to the code sections
+
+
