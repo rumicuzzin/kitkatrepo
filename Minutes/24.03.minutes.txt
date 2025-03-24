@@ -12,4 +12,9 @@
 
 2:50 - Intagration task demo is done and each member is adding comments to the code sections
 
+3:15 - Plan is made for work to be done tonight before the marking session.
+-Kelian to fix EX4
+-Willam to do ReadME
+-Josh to tidy github
+-Alex to fix EX5
 
