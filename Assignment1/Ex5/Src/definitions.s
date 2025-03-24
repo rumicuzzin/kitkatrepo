@@ -1,5 +1,3 @@
-
-
 @ base register for resetting and clock settings
 .equ RCC, 0x40021000
 .equ AHBENR, 0x14	@ register for enabling clocks
@@ -76,3 +74,4 @@
 
 .equ BUTTON_PIN, 0x00
 .equ IDR, 0x10
+
