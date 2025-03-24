@@ -1,0 +1,222 @@
+.syntax unified
+.thumb
+
+.global main
+
+#include "initialise.s"
+
+.data
+
+
+.align
+terminate_char: .byte '!'
+incoming_buffer: .space 254
+buffer_length: .byte 254
+decodedtext: .space 50
+.text
+
+main:
+	BL initialise_power
+	BL enable_peripheral_clocks
+	BL enable_uart4
+	BL initialise_discovery_board
+	/*if the following two fucntions is used remeber to uncomment the
+	same two function in branch<transmitting>*/
+	@uncomment the BOTH TWO lines under to change the clock speed (*6) for Ex3c
+	@BL change_clock_speed
+	@BL set_baud_rate
+
+	LDR R0, =UART4 @save address of UART to R0
+	LDR R1, =incoming_buffer	@save the address of buffer to R1
+	LDR R2, =terminate_char	@save adress of terminate_char to R2
+	LDRB R2, [R2]
+
+	MOV R3, #0 @counter
+
+loop:
+
+	LDR R4, [R0, USART_ISR]	@status of uart
+	TST R4, 1 << UART_ORE | 1 << UART_FE @Do a AND of the current status and the bit mask or ore and fe
+
+	BNE clear_errors
+
+	TST R4, 1 << UART_RXNE
+
+	BEQ loop
+
+	LDRB R5, [R0, USART_RDR]
+	STRB R5, [R1, R3]
+
+	ADD R3, #1
+
+	CMP R5, R2
+	BNE keep_going
+
+	@uncomment the line under for Ex3d
+	B if_palindome
+
+keep_going:
+	LDR R4, [R0, USART_RQR]
+	ORR R4, 1 << UART_RXFRQ
+	STR R4, [R0, USART_RQR]
+
+	BGT loop
+clear_errors:
+@clear overrun and frame error
+	LDR R4, [R0, USART_ICR]
+	ORR R4, 1 << UART_ORECF | 1 << UART_FECF @ clear the flags
+	STR R4, [R0, USART_ICR]	@store the status back
+	B loop
+
+if_palindome:
+	LDR R1, =  incoming_buffer
+	MOV R2, #0
+	MOV R5, #0
+
+string_length:
+	MOV R0, #0
+	MOV R4, #0
+
+string_length_loop:
+	LDRB R3, [R1,R4]       		@ load next letter
+	CMP R3, #0                  @ check the next letter is '0' or not
+    BEQ found_length            @ if is '0' means find the length of the string
+    ADD R4, R4, #1
+    B string_length_loop
+
+found_length:
+    MOV R4, R4
+
+is_palindrome:
+	MOV R2, R4
+	SUB R2, R2 ,#1
+
+palindrome_check:
+	MOV R5, R1	@储存字符串的地址用于正向读取
+	MOV R6, R1 @储存字符串的地址用于反向读取
+	LDRB R7, [R1], #1
+	LDRB R8, [R6,R2]
+	CMP R7, R8
+	BNE not_palindrome
+
+	ADD R2, R2, #-1
+	CMP R1, R2
+	BGE end_palindrome
+
+	B palindrome_check
+
+not_palindrome:
+	@MOV R0, #0
+	@B end
+    MOV R3, #0
+    MOV R4, #0
+    MOV R5, #0
+    LDR R1, =incoming_buffer
+	B vowels_count_nodecode
+
+end_palindrome:
+	@MOV R0, #1
+	@B end
+    B decode
+
+decode:
+    LDR R1, =incoming_buffer
+    LDR R9, = decodedtext
+    MOV R2, #3  @ shift
+
+decode_loop:
+	LDRB R3, [R1], #1        @ read the letter in string
+    CMP R3, #0               @ check to the end
+    BEQ decode_done
+
+	CMP R3, #'a'
+    BLT store_char           @ not lowercase, store
+    CMP R3, #'z'
+    BGT store_char           @ not lowercase, store
+
+    SUB R3, R3, R2           @ decode minus shift
+    CMP R3, #'a'
+    BGE store_char
+    ADD R3, R3, #26
+
+store_char:
+    STRB R3, [R9], #1        @ 存储解密字符
+    B decode_loop
+
+decode_done:
+    MOV R3, #0
+    MOV R4, #0
+    MOV R5, #0
+    LDR R9, = decodedtext
+    @B end
+    B vowels_count_decode
+
+vowels_count_nodecode:
+	LDRB R3, [R1], #1
+	CMP R3, #0
+	BEQ display_vowel_nodecode
+    CMP R3, #'a'
+    BEQ increment_vowel_nodecode
+    CMP R3, #'e'
+    BEQ increment_vowel_nodecode
+    CMP R3, #'i'
+    BEQ increment_vowel_nodecode
+    CMP R3, #'o'
+    BEQ increment_vowel_nodecode
+    CMP R3, #'u'
+    BEQ increment_vowel_nodecode
+
+    CMP R3, #'z'
+    BGT vowels_count_nodecode   @skip
+    CMP R3, #'a'
+    BGE increment_consonant_nodecode @ count in consonant
+    B vowels_count_nodecode            @ skip
+increment_vowel_nodecode:
+	ADD R4, R4, #1
+	B vowels_count_nodecode
+
+increment_consonant_nodecode:
+	ADD R5, R5, #1
+	B vowels_count_nodecode
+
+display_vowel_nodecode:
+	LDR R10, = GPIOE
+	STRB R4, [R10, #ODR +1]
+	B display_vowel_nodecode
+
+vowels_count_decode:
+	LDRB R3, [R9], #1
+	CMP R3, #0
+	@BEQ end
+	BEQ display_vowel_decode
+	BEQ end
+    CMP R3, #'a'
+    BEQ increment_vowel_decode
+    CMP R3, #'e'
+    BEQ increment_vowel_decode
+    CMP R3, #'i'
+    BEQ increment_vowel_decode
+    CMP R3, #'o'
+    BEQ increment_vowel_decode
+    CMP R3, #'u'
+    BEQ increment_vowel_decode
+
+    CMP R3, #'z'
+    BGT vowels_count_decode   @skip
+    CMP R3, #'a'
+    BGE increment_consonant_decode @ count in consonant
+    B vowels_count_decode            @ skip
+increment_vowel_decode:
+	ADD R4, R4, #1
+	B vowels_count_decode
+
+increment_consonant_decode:
+	ADD R5, R5, #1
+	B vowels_count_decode
+
+display_vowel_decode:
+	LDR R10, = GPIOE
+	STRB R4, [R10, #ODR +1]
+	B display_vowel_nodecode
+end:
+	B end
