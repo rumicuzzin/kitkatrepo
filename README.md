@@ -10,7 +10,7 @@ This repository contains our implementation of the Assembly Language exercises f
 
 - **Joshua Kim** - Exercise 1: Memory and Pointers, Exercise 3: Serial Communication
 - **Kelian Landry** - Exercise 2: Digital I/O, Exercise 4: Hardware Timers
-- **Willem Rumi** - Exercise 3: Serial Communication, Documentation
+- **Willem Rumi** - Excercise 1: Memory and Pointers, Exercise 3: Serial Communication, Documentation
 - **Alex** - Exercise 2: Digital I/O, Exercise 4: Hardware Timers, Exercise 5: Integration
 
 ---
