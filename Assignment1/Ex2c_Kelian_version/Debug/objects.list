@@ -1,4 +1,0 @@
-"./Src/definitions.o"
-"./Src/digitalio1.o"
-"./Src/initialise.o"
-"./Startup/startup_stm32f303vctx.o"
