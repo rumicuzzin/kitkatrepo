@@ -18,7 +18,7 @@ main:
     MOV R1, #159               @ Prescaler to get 1 MHz from system clock
     STR R1, [R0, TIM_PSC]
 
-    LDR R1, =50000            @ ARR = 500000 → overflow every 0.5 sec
+    LDR R1, =50000            @ ARR = 50000 → overflow every 0.5 sec
     STR R1, [R0, TIM_ARR]
 
     MOV R1, #0b10000001        @ ARPE=1, CEN=1
